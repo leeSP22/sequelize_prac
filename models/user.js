@@ -11,17 +11,35 @@ module.exports = (sequelize, DataTypes) => {
      */
     static associate(models) {
       // define association here
-
-      // this.hasMany(models.테이블,{foreignKey:"userId"})
+      // this.hasMany(models.Posts,{
+      //   as: "Posts",
+      //   foreignKey:"userId",
+      // });
     }
   }
   User.init({
-    username: {
-      type: DataTypes.STRING,
+    userId: {
+      allowNull: false,
+      autoIncrement: true,
+      type: DataTypes.INTEGER,
       primaryKey: true,
     },
-    password: DataTypes.STRING
-  }, {
+    username: {
+      allowNull: false,
+      unique: true,
+      type: DataTypes.STRING,
+    },
+    password: {
+      allowNull: false,
+      type:DataTypes.STRING,
+    },
+    createdAt: {
+      type: DataTypes.DATE,
+    },
+    updatedAt: {
+      type: DataTypes.DATE,
+    },
+    },{
     sequelize,
     modelName: 'User',
   });

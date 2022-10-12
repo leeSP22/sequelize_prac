@@ -1,19 +1,35 @@
 const express = require("express");
 const jwt = require("jsonwebtoken");
 const authMiddleware = require("./middlewares/auth-middleware");
+const cookieParser = require('cookie-parser');
 
 const app = express();
 const router = express.Router();
-
 
 const { Op } = require("sequelize");
 const { User } = require("./models");
 
 app.use(express.json());
 
+app.use(cookieParser());
+
+const likesRouter = require("./routes/like");
+app.use([likesRouter]);
+
+const postsRouter = require("./routes/posts");
+app.use([postsRouter]);
+
+const commentsRouter = require("./routes/comments");
+app.use([commentsRouter]);
+
+
 
 //회원가입 API
 router.post("/signup", async (req, res) => {
+    if(req.cookies.token){
+      res.send({"message":"이미 로그인 되어 있습니다!"})
+      return;
+    }
     const {nickname, password, confirm} = req.body;
     console.log("test");
     if (password !== confirm) {
@@ -54,14 +70,18 @@ router.post("/signup", async (req, res) => {
   //로그인  API
 router.post("/login", async (req, res) => {
     const { nickname, password } = req.body;
-    console.log(nickname,password)
+    if(req.cookies.token){
+      res.send({"message":"이미 로그인 되어 있습니다!"})
+      return;
+    }
     const user = await User.findOne({
       where: {
         username: nickname,
       },
     });
-    console.log(user.username)
-    const token = jwt.sign({ key: user.username }, "customized-secret-key")
+    console.log("1");
+    console.log(user.userId);
+    const token = jwt.sign({ key: user.userId }, "customized-secret-key")
     // NOTE: 인증 메세지는 자세히 설명하지 않는것을 원칙으로 한다: https://cheatsheetseries.owasp.org/cheatsheets/Authentication_Cheat_Sheet.html#authentication-responses
     if (!user || password !== user.password) {
       res.status(400).send({
@@ -75,10 +95,11 @@ router.post("/login", async (req, res) => {
     });
   });
 
-
   //로그인시 회원정보 가져오기
   router.get("/users/me",authMiddleware,async(req,res)=>{
-    console.log(req.headers.cookie);
+    console.log({ User });
+    console.log("3");
+    console.log(req.cookies.token);
     const { user } = res.locals;
     console.log(res.locals);
     res.send({
